@@ -1,0 +1,47 @@
+# Create Todo
+post http://localhost:8080/api/todos 
+Content-Type: application/json
+
+{
+    "title": "Task 1",
+    "description": "Description for Task 1",
+    "completed": false,
+    "priority": "high",
+    "dueDate": "2026-01-01"
+    "createdAt": "2026-01-01"
+}
+
+###
+
+# Get all todos
+get http://localhost:8080/api/todos
+
+###
+
+# Get Todo by id
+get http://localhost:8080/api/todos/695654e8ed2ba75d0c8c3d28
+
+###
+
+# Get Todo by not exist id
+get http://localhost:8080/api/todos/695654e8ed2ba75d0c8c3d29
+
+###
+
+# Update Todo
+put http://localhost:8080/api/todos/695654e8ed2ba75d0c8c3d28
+Content-Type: application/json
+
+{
+    "title": "Task 1",
+    "description": "Description for Task 1",
+    "completed": true,
+    "priority": "high",
+    "dueDate": "2026-01-01"
+    "createdAt": "2026-01-01"
+}
+
+###
+
+# Delete Todo
+delete http://localhost:8080/api/todos/695654e8ed2ba75d0c8c3d28
