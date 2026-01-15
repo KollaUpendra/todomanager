@@ -6,8 +6,8 @@ Content-Type: application/json
     "title": "Task 1",
     "description": "Description for Task 1",
     "completed": false,
-    "priority": "high",
-    "dueDate": "2026-01-01"
+    "priority": "High",
+    "dueDate": "2026-01-01",
     "createdAt": "2026-01-01"
 }
 
@@ -36,8 +36,8 @@ Content-Type: application/json
     "title": "Task 1",
     "description": "Description for Task 1",
     "completed": true,
-    "priority": "high",
-    "dueDate": "2026-01-01"
+    "priority": "High",
+    "dueDate": "2026-01-01",
     "createdAt": "2026-01-01"
 }
 

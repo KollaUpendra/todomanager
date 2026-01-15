@@ -1,12 +1,11 @@
 import { createTodo, getTodos, deleteTodo, updateTodo } from "../services/todoApi"
+import FilterBar from "../components/FilterBar"
 import TodoForm from "../components/TodoForm"
-import TodoItem from "../components/TodoItem"
-import TodoList from "../components/TodoList"
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
-import TodoCO from "../components/TodoCO"
+import TodoCompletionStats from "../components/TodoCompletionStats"
 import { Modal } from "react-bootstrap"
-import FilterBar from "../components/FilterBar"
+import { formatDateForInput } from "../utils/dateUtils"
 
 function Home() {
 
@@ -19,15 +18,9 @@ function Home() {
     const handleCreateTodo = async (newtodo) => {
         try {
             setLoading(true)
-            console.log(newtodo)
             const response = await createTodo(newtodo);
             console.log(response)
             if (response.status === 201 || response.status === 200) {
-                // Add the new todo to the list
-                if (response.data.payload) {
-                    setTodos([...todos, response.data.payload])
-                }
-
                 await handleGetTodos()
 
             } else {
@@ -81,10 +74,30 @@ function Home() {
         setValue("title", updateTodo.title)
         setValue("description", updateTodo.description)
         setValue("priority", updateTodo.priority)
-        // Format date to yyyy-MM-dd for HTML5 date input
-        const formattedDate = updateTodo.dueDate ? new Date(updateTodo.dueDate).toISOString().split('T')[0] : ''
-        setValue("dueDate", formattedDate)
+        // Format date to yyyy-MM-dd for HTML5 date input (timezone-safe)
+        setValue("dueDate", formatDateForInput(updateTodo.dueDate))
         setValue("completed", updateTodo.completed ? "true" : "false")
+    }
+
+    const handleTaskCompletedChange = async (id, value) => {
+        try {
+            // Optimistic update
+            const updatedTodos = todos.map(todo => {
+                if (todo._id === id) {
+                    return { ...todo, completed : value }
+                }
+                return todo
+            })
+            setTodos(updatedTodos)
+            
+            // Persist to backend
+            const todoToUpdate = todos.find(t => t._id === id);
+            await updateTodo(id, { ...todoToUpdate, completed: value });
+        } catch (error) {
+            // Rollback on error
+            setError(error.message);
+            await handleGetTodos(); // Refresh from server
+        }
     }
 
     const saveModifiedTodo = async (data) => {
@@ -128,22 +141,41 @@ function Home() {
 
     return (
         <>
-            <div className="container mb-5 mt-5 ">
-                <div className="pb-5">
-                    <FilterBar todos={todos} handleUpdateTodo={handleUpdateTodo} handleDeleteTodo={handleDeleteTodo} />
-                </div>
-                <div className="pb-5 max-w-50 mx-auto">
-                    <TodoForm onCreateTodo={handleCreateTodo} />
-                </div>
-                <div className="d-lg-flex justify-content-between">
-                    <div>
-                        <TodoCO todos = {todos} value ="true"/>
+            <div className="d-grid ">
+
+                <div className="row">
+                    <div className="col-4">
+                        <TodoForm onCreateTodo={handleCreateTodo} />
                     </div>
-                    <div>
-                        <TodoCO todos = {todos} value ="false"/>
+                    <div className="col-8">
+                        <FilterBar handleTaskCompletedChange={handleTaskCompletedChange} todos={todos} handleUpdateTodo={handleUpdateTodo} handleDeleteTodo={handleDeleteTodo} />
                     </div>
                 </div>
+
+                <div className="row">
+                    <div className="col">
+                        <TodoCompletionStats todos={todos} value="true" />
+                    </div>
+                    <div className="col">
+                        <TodoCompletionStats todos={todos} value="false" />
+                    </div>
+                </div>
+
             </div>
+
+            {error && (
+                <div className="alert alert-danger" role="alert">
+                    {error.message || error}
+                </div>
+            )}
+            {loading && (
+                <div className="d-flex justify-content-center">
+                    <div className="spinner-border" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            )}
+
             <Modal show={show}>
                 <Modal.Dialog>
                     <Modal.Header closeButton onClick={handleCancelUpdate}>
